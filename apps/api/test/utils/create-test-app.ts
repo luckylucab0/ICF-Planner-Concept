@@ -14,8 +14,13 @@ import { env } from '../../src/common/config/env';
 // App selbst, inkl. des Test-Defaults aus der zentralen Config.
 export const testPrisma = new PrismaClient({ datasourceUrl: env.DATABASE_URL });
 
-export async function createTestApp(): Promise<NestFastifyApplication> {
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+export async function createTestApp(
+  // Optionaler Hook für Provider-Overrides (z. B. Mail-Capture)
+  configure?: (builder: ReturnType<typeof Test.createTestingModule>) => void,
+): Promise<NestFastifyApplication> {
+  const builder = Test.createTestingModule({ imports: [AppModule] });
+  configure?.(builder);
+  const moduleRef = await builder.compile();
   const app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
   app.setGlobalPrefix('api');
   app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });

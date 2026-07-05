@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AssignmentsModule } from './assignments/assignments.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
+import { AvailabilityModule } from './availability/availability.module';
 import { AdminGuard } from './auth/guards/admin.guard';
 import { OriginCheckGuard } from './auth/guards/origin-check.guard';
 import { SessionAuthGuard } from './auth/guards/session-auth.guard';
@@ -27,6 +29,8 @@ import { TeamsModule } from './teams/teams.module';
     PeopleModule,
     TeamsModule,
     SchedulingModule,
+    AvailabilityModule,
+    AssignmentsModule,
     HealthModule,
     // Basis-Rate-Limit für alle Endpoints; Auth-Routen setzen per
     // @Throttle deutlich engere Limits. In Tests deaktiviert – die
