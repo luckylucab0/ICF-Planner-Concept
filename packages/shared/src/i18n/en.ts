@@ -39,6 +39,25 @@ export const en = {
     accept: 'Accept',
     decline: 'Decline',
     myAssignments: 'My assignments',
+    noneUpcoming: 'No upcoming assignments.',
+    suggest: 'Suggestions',
+    assign: 'Assign',
+    remove: 'Remove',
+    lastServed: 'last served {{days}} days ago',
+    neverServed: 'never served yet',
+    recentCount: '{{count}} assignments in 90 days',
+    warnAdjacentDay: 'serving the day before/after',
+    declineReason: 'Reason (optional)',
+    conflictUnavailable: 'This person is unavailable on that date.',
+  },
+  respond: {
+    heading: 'Hi {{firstName}}!',
+    question: 'Can you serve as {{position}} at "{{eventTitle}}" on {{date}}?',
+    accepted: 'Thank you for accepting! 🎉',
+    declined: 'Too bad – thanks for letting us know. Your team leader has been notified.',
+    alreadyAnswered: 'This link has already been used.',
+    expired: 'This link has expired. Please contact your team leader.',
+    invalid: 'This link is invalid.',
   },
   plans: {
     staffed: 'staffed',
@@ -73,6 +92,10 @@ export const en = {
     assignedBody:
       'Hi {{firstName}},\n\nyou have been scheduled for {{position}} at "{{eventTitle}}" on {{date}}.\n\nAccept: {{acceptUrl}}\nDecline: {{declineUrl}}\n\nThank you for serving!',
     reminderSubject: 'Reminder: {{eventTitle}} on {{date}}',
+    reminderBody:
+      'Hi {{firstName}},\n\njust a reminder: you are scheduled as {{position}} at "{{eventTitle}}" on {{date}}.\n\nThank you for serving!',
     declinedAlertSubject: 'Declined: {{personName}} for {{position}} on {{date}}',
+    declinedAlertBody:
+      'Hi {{leaderName}},\n\n{{personName}} has declined {{position}} at "{{eventTitle}}" on {{date}}.{{reason}}\n\nSuggested replacements (fair rotation considered):\n{{suggestions}}\n\nOpen the plan: {{planUrl}}',
   },
 } as const;

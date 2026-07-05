@@ -7,7 +7,9 @@ import { SessionProvider, useSession } from './features/auth/SessionContext';
 import PeopleListPage from './features/people/PeopleListPage';
 import ProfilePage from './features/people/ProfilePage';
 import EventDetailPage from './features/plans/EventDetailPage';
+import MyAssignments from './features/plans/MyAssignments';
 import PlansPage from './features/plans/PlansPage';
+import RespondPage from './features/respond/RespondPage';
 import TeamsPage from './features/teams/TeamsPage';
 
 // Leitet nicht eingeloggte Nutzer zum Login um. Das ist reine UX –
@@ -20,16 +22,18 @@ function RequireAuth({ children }: { children: ReactNode }) {
   return <Layout>{children}</Layout>;
 }
 
-// Platzhalter – wird mit den Plan-Modulen ausgebaut
 function Dashboard() {
   const { session } = useSession();
   const { t } = useTranslation();
   return (
-    <div>
-      <h1 className="text-xl font-bold">{t('nav.dashboard')}</h1>
-      <p className="mt-2 text-gray-600">
-        {session?.firstName} {session?.lastName} · {session?.globalRole}
-      </p>
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-xl font-bold">{t('nav.dashboard')}</h1>
+        <p className="mt-1 text-gray-600">
+          {session?.firstName} {session?.lastName}
+        </p>
+      </div>
+      <MyAssignments />
     </div>
   );
 }
@@ -39,6 +43,8 @@ export default function App() {
     <SessionProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        {/* Öffentlich: Zusage/Absage per Mail-Link, ohne Login */}
+        <Route path="/respond/:token" element={<RespondPage />} />
         <Route
           path="/"
           element={

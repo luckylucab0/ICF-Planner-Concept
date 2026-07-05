@@ -40,6 +40,25 @@ export const de = {
     accept: 'Zusagen',
     decline: 'Absagen',
     myAssignments: 'Meine Dienste',
+    noneUpcoming: 'Keine anstehenden Dienste.',
+    suggest: 'Vorschläge',
+    assign: 'Einteilen',
+    remove: 'Entfernen',
+    lastServed: 'zuletzt vor {{days}} Tagen',
+    neverServed: 'noch nie eingeteilt',
+    recentCount: '{{count}} Einsätze in 90 Tagen',
+    warnAdjacentDay: 'Dienst am Vor-/Folgetag',
+    declineReason: 'Grund (optional)',
+    conflictUnavailable: 'Diese Person ist an dem Termin abwesend.',
+  },
+  respond: {
+    heading: 'Hallo {{firstName}}!',
+    question: 'Kannst du am {{date}} als {{position}} bei „{{eventTitle}}" dienen?',
+    accepted: 'Danke für deine Zusage! 🎉',
+    declined: 'Schade – danke für die Rückmeldung. Dein Teamleiter wurde informiert.',
+    alreadyAnswered: 'Dieser Link wurde bereits verwendet.',
+    expired: 'Dieser Link ist abgelaufen. Melde dich bei deinem Teamleiter.',
+    invalid: 'Dieser Link ist ungültig.',
   },
   plans: {
     staffed: 'besetzt',
@@ -74,6 +93,10 @@ export const de = {
     assignedBody:
       'Hallo {{firstName}},\n\ndu wurdest für {{position}} bei „{{eventTitle}}" am {{date}} eingeteilt.\n\nZusagen: {{acceptUrl}}\nAbsagen: {{declineUrl}}\n\nDanke für deinen Dienst!',
     reminderSubject: 'Erinnerung: {{eventTitle}} am {{date}}',
+    reminderBody:
+      'Hallo {{firstName}},\n\nzur Erinnerung: du bist am {{date}} als {{position}} bei „{{eventTitle}}" eingeteilt.\n\nDanke für deinen Dienst!',
     declinedAlertSubject: 'Absage: {{personName}} für {{position}} am {{date}}',
+    declinedAlertBody:
+      'Hallo {{leaderName}},\n\n{{personName}} hat für {{position}} bei „{{eventTitle}}" am {{date}} abgesagt.{{reason}}\n\nVorschläge für Ersatz (faire Verteilung berücksichtigt):\n{{suggestions}}\n\nZum Plan: {{planUrl}}',
   },
 } as const;

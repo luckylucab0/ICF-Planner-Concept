@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { api } from '../../api/client';
+import { api, ApiError } from '../../api/client';
 
 export interface EventDetail {
   id: string;
@@ -9,18 +9,29 @@ export interface EventDetail {
   startsAt: string;
   location?: string | null;
   status: string;
-  slots: {
+  slots: EventSlot[];
+}
+
+interface EventSlot {
+  id: string;
+  requiredCount: number;
+  position: { id: string; name: string; team: { id: string; name: string; color: string } };
+  canAssign: boolean;
+  assignments: {
     id: string;
-    requiredCount: number;
-    position: { id: string; name: string; team: { id: string; name: string; color: string } };
-    canAssign: boolean;
-    assignments: {
-      id: string;
-      personId: string;
-      personName: string;
-      status: 'REQUESTED' | 'ACCEPTED' | 'DECLINED';
-    }[];
+    personId: string;
+    personName: string;
+    status: 'REQUESTED' | 'ACCEPTED' | 'DECLINED';
   }[];
+}
+
+interface Suggestion {
+  personId: string;
+  name: string;
+  skillLevel: string;
+  daysSinceLastService: number | null;
+  assignmentsLast90Days: number;
+  warnings: string[];
 }
 
 const statusStyle: Record<string, string> = {
@@ -29,18 +40,46 @@ const statusStyle: Record<string, string> = {
   DECLINED: 'bg-red-100 text-red-700',
 };
 
-// Dienstplan eines Termins: Slots pro Position mit Personen und
-// Zusage-Status. Einteilungs-Aktionen (Modul 6) docken hier an.
+// Dienstplan eines Termins. Teamleiter/Admins (canAssign pro Slot,
+// serverseitig bestimmt) können Vorschläge laden und direkt einteilen –
+// die Vorschlagsliste erklärt, WARUM jemand oben steht (Fairness).
 export default function EventDetailPage() {
   const { t, i18n } = useTranslation();
   const { eventId } = useParams<{ eventId: string }>();
   const [event, setEvent] = useState<EventDetail | null>(null);
+  const [suggestionsFor, setSuggestionsFor] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [conflict, setConflict] = useState<string | null>(null);
 
   const reload = useCallback(() => {
     if (eventId) void api.get<EventDetail>(`/events/${eventId}`).then(setEvent);
   }, [eventId]);
 
   useEffect(reload, [reload]);
+
+  async function openSuggestions(slotId: string) {
+    setConflict(null);
+    setSuggestionsFor(slotId);
+    setSuggestions(await api.get<Suggestion[]>(`/assignments/suggestions?slotId=${slotId}`));
+  }
+
+  async function assign(slotId: string, personId: string) {
+    setConflict(null);
+    try {
+      await api.post('/assignments', { slotId, personId });
+      setSuggestionsFor(null);
+      reload();
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        setConflict(t('assignments.conflictUnavailable'));
+      }
+    }
+  }
+
+  async function remove(assignmentId: string) {
+    await api.delete(`/assignments/${assignmentId}`);
+    reload();
+  }
 
   if (!event) return <p className="text-gray-500">{t('common.loading')}</p>;
 
@@ -82,6 +121,7 @@ export default function EventDetailPage() {
                 {slot.requiredCount}
               </span>
             </div>
+
             <ul className="mt-2 space-y-1">
               {slot.assignments.map((assignment) => (
                 <li key={assignment.id} className="flex items-center gap-2 text-sm">
@@ -91,12 +131,74 @@ export default function EventDetailPage() {
                   >
                     {statusLabel[assignment.status]}
                   </span>
+                  {slot.canAssign && (
+                    <button
+                      onClick={() => void remove(assignment.id)}
+                      className="ml-auto text-xs text-gray-400 hover:text-red-600"
+                    >
+                      {t('assignments.remove')}
+                    </button>
+                  )}
                 </li>
               ))}
               {slot.assignments.length === 0 && (
                 <li className="text-sm text-gray-400">{t('plans.nobodyAssigned')}</li>
               )}
             </ul>
+
+            {slot.canAssign && suggestionsFor !== slot.id && (
+              <button
+                onClick={() => void openSuggestions(slot.id)}
+                className="mt-2 text-sm font-medium text-indigo-600"
+              >
+                + {t('assignments.suggest')}
+              </button>
+            )}
+
+            {suggestionsFor === slot.id && (
+              <div className="mt-3 rounded-lg border border-indigo-100 bg-indigo-50 p-3">
+                {conflict && <p className="mb-2 text-sm text-red-600">{conflict}</p>}
+                <ul className="space-y-2">
+                  {suggestions.map((suggestion) => (
+                    <li key={suggestion.personId} className="flex items-center gap-2 text-sm">
+                      <div>
+                        <p className="font-medium">{suggestion.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {suggestion.daysSinceLastService === null
+                            ? t('assignments.neverServed')
+                            : t('assignments.lastServed', {
+                                days: suggestion.daysSinceLastService,
+                              })}
+                          {' · '}
+                          {t('assignments.recentCount', {
+                            count: suggestion.assignmentsLast90Days,
+                          })}
+                          {suggestion.warnings.includes('assignedAdjacentDay') && (
+                            <span className="text-amber-600">
+                              {' '}
+                              ⚠ {t('assignments.warnAdjacentDay')}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => void assign(slot.id, suggestion.personId)}
+                        className="ml-auto rounded bg-indigo-600 px-2 py-1 text-xs font-medium text-white"
+                      >
+                        {t('assignments.assign')}
+                      </button>
+                    </li>
+                  ))}
+                  {suggestions.length === 0 && <li className="text-sm text-gray-500">—</li>}
+                </ul>
+                <button
+                  onClick={() => setSuggestionsFor(null)}
+                  className="mt-2 text-xs text-gray-500"
+                >
+                  {t('common.cancel')}
+                </button>
+              </div>
+            )}
           </section>
         ))}
       </div>
