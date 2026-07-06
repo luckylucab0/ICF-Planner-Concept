@@ -1,14 +1,20 @@
-# Release-Pipeline in zwei Stufen:
+# Release-Pipeline (Single-Run, release-please-getrieben):
 #
 # 1. release-please (bei jedem Push auf main): pflegt einen Release-PR
-#    mit Changelog aus Conventional Commits. Wird der PR gemergt,
-#    entsteht Tag (v*) + GitHub Release automatisch.
+#    mit Changelog aus Conventional Commits. Wird der PR gemergt, entsteht
+#    Tag (v*) + GitHub Release, und der Image-Build laeuft im SELBEN Lauf.
 #    Warum release-please statt semantic-release: PR-basiert und damit
 #    kompatibel mit Branch Protection – es pusht nie direkt auf main.
 #
-# 2. Image-Build (wenn das Release veröffentlicht wird): Multi-Arch-Images
-#    (amd64 + arm64) nach GHCR, signiert mit cosign (keyless/OIDC),
-#    SBOM als Release-Artefakt.
+# 2. Image-Build (nur wenn release-please ein Release erzeugt hat, Output
+#    release_created == 'true'): Multi-Arch-Images (amd64 + arm64) nach GHCR,
+#    signiert mit cosign (keyless/OIDC), SBOM als Release-Artefakt.
+#
+#    WICHTIG: Der Build haengt bewusst am Output des release-please-Jobs im
+#    selben Push-Lauf und NICHT an einem separaten `release: published`-Event.
+#    Grund: Ein Release, das release-please mit dem GITHUB_TOKEN anlegt,
+#    triggert KEINE Folge-Workflows (GitHub unterbindet Rekursion) – mit dem
+#    alten `on: release`-Trigger lief der Build daher nie an.
 #
 # Deployment-Philosophie: Diese Pipeline deployt NICHT auf fremde Server.
 # Betreiber aktualisieren selbst per `docker compose pull && up -d`
@@ -19,8 +25,6 @@ name: Release
 on:
   push:
     branches: [main]
-  release:
-    types: [published]
 
 permissions:
   contents: read
@@ -31,21 +35,29 @@ concurrency:
 
 jobs:
   release-please:
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: write # Release + Tag anlegen
       pull-requests: write # Release-PR pflegen
+    # Outputs an den Build-Job durchreichen: ob ein Release entstand (damit
+    # der Build im selben Lauf startet) und welchen Tag es traegt (fuer die
+    # Image-Version + den SBOM-Upload).
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       # Third-Party-Action → SHA-gepinnt (Supply Chain), Tag als Kommentar
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
   build-and-push:
-    if: github.event_name == 'release'
+    # Laeuft im selben Push-Lauf, sobald release-please ein Release erzeugt hat.
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
@@ -79,7 +91,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/serveflow-${{ matrix.name }}
           tags: |
-            type=semver,pattern={{version}},value=${{ github.event.release.tag_name }}
+            type=semver,pattern={{version}},value=${{ needs.release-please.outputs.tag_name }}
             type=raw,value=latest
             type=sha,format=long
 
@@ -119,4 +131,4 @@ jobs:
       - name: Attach SBOM to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.event.release.tag_name }}" "sbom-${{ matrix.name }}.spdx.json" --clobber
+        run: gh release upload "${{ needs.release-please.outputs.tag_name }}" "sbom-${{ matrix.name }}.spdx.json" --clobber
