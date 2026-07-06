@@ -5,7 +5,7 @@
   "license": "AGPL-3.0-only",
   "description": "ServeFlow REST-API (NestJS + Fastify + Prisma)",
   "scripts": {
-    "dev": "tsx watch --clear-screen=false src/main.ts",
+    "dev": "tsc-watch -p tsconfig.build.json --noClear --onSuccess \"node dist/main.js\"",
     "build": "prisma generate && tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
     "lint": "eslint src prisma test",
@@ -54,6 +54,7 @@
     "jest": "^29.7.0",
     "supertest": "^7.1.0",
     "ts-jest": "^29.3.2",
+    "tsc-watch": "^7.2.1",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
