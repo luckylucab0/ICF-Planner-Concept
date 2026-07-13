@@ -82,6 +82,10 @@ export const de = {
     none: 'Gerade gibt es keine offenen Dienste für dich.',
     stillOpen: '{{count}} offen',
     openToggle: 'Selbst-Eintragung',
+    self: 'Mich eintragen',
+    assignOther: 'Person eintragen',
+    release: 'Für Selbst-Eintragung freigeben',
+    releaseOff: 'Freigabe aufheben',
   },
   import: {
     title: 'Datenimport',
