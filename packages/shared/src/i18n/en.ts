@@ -72,6 +72,10 @@ export const en = {
     none: 'There are no open slots for you right now.',
     stillOpen: '{{count}} open',
     openToggle: 'Self sign-up',
+    self: 'Sign me up',
+    assignOther: 'Assign someone',
+    release: 'Open for self sign-up',
+    releaseOff: 'Close self sign-up',
   },
   respond: {
     heading: 'Hi {{firstName}}!',

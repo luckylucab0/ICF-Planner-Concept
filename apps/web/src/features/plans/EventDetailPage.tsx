@@ -21,6 +21,7 @@ interface EventSlot {
   openForSignup: boolean;
   position: { id: string; name: string; team: { id: string; name: string; color: string } };
   canAssign: boolean;
+  canSignup: boolean;
   assignments: {
     id: string;
     personId: string;
@@ -54,6 +55,7 @@ export default function EventDetailPage() {
   const [suggestionsFor, setSuggestionsFor] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [conflict, setConflict] = useState<string | null>(null);
+  const [signupError, setSignupError] = useState<{ slotId: string; message: string } | null>(null);
 
   const reload = useCallback(() => {
     if (eventId) void api.get<EventDetail>(`/events/${eventId}`).then(setEvent);
@@ -88,6 +90,21 @@ export default function EventDetailPage() {
   async function toggleSignup(slot: EventSlot) {
     await api.patch(`/signup/slots/${slot.id}`, { open: !slot.openForSignup });
     reload();
+  }
+
+  // "Mich eintragen": zählt direkt als Zusage (gleiche API wie das Dashboard)
+  async function signupSelf(slotId: string) {
+    setSignupError(null);
+    try {
+      await api.post(`/signup/slots/${slotId}`);
+      reload();
+    } catch (error) {
+      const message =
+        error instanceof ApiError && error.status === 409
+          ? t('assignments.conflictUnavailable')
+          : t('common.error');
+      setSignupError({ slotId, message });
+    }
   }
 
   if (!event) return <p className="text-muted">{t('common.loading')}</p>;
@@ -143,17 +160,6 @@ export default function EventDetailPage() {
                 {slot.requiredCount}
               </span>
             </div>
-            {slot.canAssign && (
-              <label className="mt-1 flex items-center gap-1.5 text-xs text-muted">
-                <input
-                  type="checkbox"
-                  checked={slot.openForSignup}
-                  onChange={() => void toggleSignup(slot)}
-                />
-                {t('signup.openToggle')}
-              </label>
-            )}
-
             <ul className="mt-2 space-y-1">
               {slot.assignments.map((assignment) => (
                 <li key={assignment.id} className="flex items-center gap-2 text-sm">
@@ -176,13 +182,36 @@ export default function EventDetailPage() {
               )}
             </ul>
 
-            {slot.canAssign && suggestionsFor !== slot.id && (
-              <button
-                onClick={() => void openSuggestions(slot.id)}
-                className="mt-2 text-sm link-gold"
-              >
-                + {t('assignments.suggest')}
-              </button>
+            {(slot.canSignup || slot.canAssign) && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {slot.canSignup && (
+                  <button
+                    onClick={() => void signupSelf(slot.id)}
+                    className="btn-primary px-3 py-1.5 text-xs"
+                  >
+                    {t('signup.self')}
+                  </button>
+                )}
+                {slot.canAssign && suggestionsFor !== slot.id && (
+                  <button
+                    onClick={() => void openSuggestions(slot.id)}
+                    className="btn-ghost px-3 py-1.5 text-xs font-medium"
+                  >
+                    {t('signup.assignOther')}
+                  </button>
+                )}
+                {slot.canAssign && (
+                  <button
+                    onClick={() => void toggleSignup(slot)}
+                    className="ml-auto text-xs text-muted underline"
+                  >
+                    {slot.openForSignup ? t('signup.releaseOff') : t('signup.release')}
+                  </button>
+                )}
+              </div>
+            )}
+            {signupError?.slotId === slot.id && (
+              <p className="mt-2 text-xs text-red-400">{signupError.message}</p>
             )}
 
             {suggestionsFor === slot.id && (
