@@ -187,6 +187,7 @@ model TeamMembership {
 enum TeamCapability {
   ASSIGN // einteilen/entfernen/Vorschläge sehen
   OPEN_SIGNUP // Slots zur Selbst-Eintragung freigeben (+ Bypass)
+  SELF_SIGNUP // sich selbst in freigegebene Slots des eigenen Teams eintragen
   MANAGE_MEMBERS // Mitglieder aufnehmen/entfernen, Rollen unterhalb LEADER
   MANAGE_POSITIONS // Positionen und Skills pflegen
   NOTES // GENERAL-Notizen über Teammitglieder

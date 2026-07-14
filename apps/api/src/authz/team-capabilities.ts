@@ -14,6 +14,7 @@ import { TeamCapability, TeamRole } from '@prisma/client';
 export const TEAM_CAPABILITIES: TeamCapability[] = [
   'ASSIGN',
   'OPEN_SIGNUP',
+  'SELF_SIGNUP',
   'MANAGE_MEMBERS',
   'MANAGE_POSITIONS',
   'NOTES',
@@ -31,6 +32,7 @@ export const DEFAULT_MATRIX: Record<ConfigurableTeamRole, Record<TeamCapability,
   DEPUTY: {
     ASSIGN: true,
     OPEN_SIGNUP: true,
+    SELF_SIGNUP: true,
     MANAGE_MEMBERS: false,
     MANAGE_POSITIONS: true,
     NOTES: true,
@@ -42,6 +44,9 @@ export const DEFAULT_MATRIX: Record<ConfigurableTeamRole, Record<TeamCapability,
   MEMBER: {
     ASSIGN: false,
     OPEN_SIGNUP: false,
+    // Selbst-Eintragung ist der Zweck der Slot-Freigabe – standardmäßig
+    // dürfen alle Rollen; Teams schalten gezielt ab
+    SELF_SIGNUP: true,
     MANAGE_MEMBERS: false,
     MANAGE_POSITIONS: false,
     NOTES: false,
@@ -53,6 +58,7 @@ export const DEFAULT_MATRIX: Record<ConfigurableTeamRole, Record<TeamCapability,
   INTERN: {
     ASSIGN: false,
     OPEN_SIGNUP: false,
+    SELF_SIGNUP: true,
     MANAGE_MEMBERS: false,
     MANAGE_POSITIONS: false,
     NOTES: false,

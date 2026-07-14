@@ -286,6 +286,7 @@ export const de = {
     capabilities: {
       ASSIGN: 'Einteilen & Vorschläge',
       OPEN_SIGNUP: 'Dienste zur Selbst-Eintragung freigeben',
+      SELF_SIGNUP: 'Sich selbst in freigegebene Dienste eintragen',
       MANAGE_MEMBERS: 'Mitglieder & Rollen verwalten',
       MANAGE_POSITIONS: 'Positionen & Skills pflegen',
       NOTES: 'Team-Notizen lesen/schreiben',

@@ -32,6 +32,7 @@ describe('Vertretung & Selbst-Eintragung (integration)', () => {
   let memberId: string;
   let helperId: string;
   let outsiderId: string;
+  let teamId: string;
   let tonId: string;
   let thekeId: string;
   let slotId: string;
@@ -88,6 +89,7 @@ describe('Vertretung & Selbst-Eintragung (integration)', () => {
       },
       include: { positions: true },
     });
+    teamId = team.id;
     tonId = team.positions.find((p) => p.name === 'Ton')!.id;
     thekeId = team.positions.find((p) => p.name === 'Theke')!.id;
     await prisma.positionSkill.createMany({
@@ -272,8 +274,8 @@ describe('Vertretung & Selbst-Eintragung (integration)', () => {
     expect(asLeader.json().openForSignup).toBe(true);
   });
 
-  it('offene Dienste erscheinen nur für Personen mit passender Position', async () => {
-    // Helper hat die Theke-Position → sieht den Slot
+  it('offene Dienste erscheinen nur für Team-Mitglieder', async () => {
+    // Helper ist Team-Mitglied → sieht den Slot
     const helperCookie = await login('helper');
     const forHelper = await app.inject({
       method: 'GET',
@@ -282,7 +284,7 @@ describe('Vertretung & Selbst-Eintragung (integration)', () => {
     });
     expect(forHelper.json().map((s: { slotId: string }) => s.slotId)).toContain(signupSlotId);
 
-    // Outsider hat keine Position → leere Liste
+    // Outsider ist in keinem Team → leere Liste
     const forOutsider = await app.inject({
       method: 'GET',
       url: '/api/v1/signup/open',
@@ -291,7 +293,7 @@ describe('Vertretung & Selbst-Eintragung (integration)', () => {
     expect(forOutsider.json()).toEqual([]);
   });
 
-  it('ohne Positions-Zuordnung keine Eintragung (403)', async () => {
+  it('ohne Team-Mitgliedschaft keine Eintragung (403)', async () => {
     const response = await app.inject({
       method: 'POST',
       url: `/api/v1/signup/slots/${signupSlotId}`,
@@ -338,6 +340,59 @@ describe('Vertretung & Selbst-Eintragung (integration)', () => {
     });
     expect(response.statusCode).toBe(201);
     expect(response.json().status).toBe('ACCEPTED');
+  });
+
+  it('Rechtematrix kann Selbst-Eintragung pro Rolle abschalten', async () => {
+    const event4 = await prisma.event.create({
+      data: {
+        title: `Gottesdienst4-${uniq}`,
+        startsAt: new Date(Date.now() + 28 * 86_400_000),
+        endsAt: new Date(Date.now() + 28 * 86_400_000 + 90 * 60_000),
+        status: 'PUBLISHED',
+        slots: { create: [{ positionId: thekeId, requiredCount: 1, openForSignup: true }] },
+      },
+      include: { slots: true },
+    });
+    const openSlotId = event4.slots[0].id;
+    await prisma.teamRolePermission.create({
+      data: { teamId, role: 'MEMBER', capability: 'SELF_SIGNUP', allowed: false },
+    });
+
+    // Offene-Dienste-Liste lässt den Slot weg
+    const open = await app.inject({
+      method: 'GET',
+      url: '/api/v1/signup/open',
+      headers: { cookie: memberCookie },
+    });
+    expect(open.json().map((s: { slotId: string }) => s.slotId)).not.toContain(openSlotId);
+
+    // Termin-Detail bietet kein "Mich eintragen" an
+    const detail = await app.inject({
+      method: 'GET',
+      url: `/api/v1/events/${event4.id}`,
+      headers: { cookie: memberCookie },
+    });
+    expect(detail.json().slots[0].canSignup).toBe(false);
+
+    // Eintragen wird serverseitig abgelehnt
+    const attempt = await app.inject({
+      method: 'POST',
+      url: `/api/v1/signup/slots/${openSlotId}`,
+      headers: { cookie: memberCookie },
+    });
+    expect(attempt.statusCode).toBe(403);
+
+    // LEADER hat das Recht implizit weiterhin
+    const asLeader = await app.inject({
+      method: 'POST',
+      url: `/api/v1/signup/slots/${openSlotId}`,
+      headers: { cookie: leaderCookie },
+    });
+    expect(asLeader.statusCode).toBe(201);
+
+    await prisma.teamRolePermission.deleteMany({
+      where: { teamId, capability: 'SELF_SIGNUP' },
+    });
   });
 
   it('Vorschläge enthalten Team-Mitglieder ohne Position (mit Warnung), Einteilen klappt', async () => {
