@@ -153,11 +153,45 @@ Titel oder CCLI-Nummer:
 
 ![Liederdatenbank](screenshots/13-lieder.png)
 
-- Pro Lied: **Standard-Tonart, Tempo (BPM), CCLI-Nummer** und beliebig viele
-  **Arrangements** (z. B. „Akustik in C", „Band in A").
+- Pro Lied: **Standard-Tonart, Tempo (BPM), CCLI-Nummer, Autor(en),
+  Copyright, Songtext** und beliebig viele **Arrangements** (z. B. „Akustik
+  in C", „Band in A").
 - Ansehen dürfen alle; anlegen und ändern können Teamleitende und Admins.
 - Wird ein Lied gelöscht, bleiben alte Ablaufpläne erhalten – nur die
   Verknüpfung verschwindet.
+
+#### Lieder aus SongSelect importieren
+
+Eine direkte Verbindung zum CCLI-Konto ist leider nicht möglich – CCLI hat
+sein Partner-API-Programm für neue Anbieter eingestellt. Der offizielle Weg
+für SongSelect-Abonnenten: Lied bei SongSelect als **ChordPro-Datei** (oder
+Nur-Text) **herunterladen** und hier über **Datei importieren** hochladen.
+
+![Lied importieren mit Textansicht](screenshots/21-song-import.png)
+
+- Titel, Tonart, Tempo, CCLI-Nummer, Autoren, Copyright und der Songtext
+  werden automatisch aus der Datei übernommen; über **Text anzeigen** siehst
+  du den Songtext (inkl. Akkorden bei ChordPro).
+- **Duplikate** werden über die CCLI-Nummer erkannt – beim erneuten Import
+  fragt ServeFlow, ob das bestehende Lied überschrieben werden soll.
+- Unterstützt werden ChordPro-Dateien (`.cho`, `.chopro`, `.pro`) und die
+  Text-Downloads von SongSelect (`.txt`).
+- Hinweis: Das Speichern von Songtexten setzt voraus, dass deine Gemeinde
+  eine **CCLI-Lizenz** hat.
+
+#### CCLI-Nutzungsbericht
+
+Für die Meldung ans CCLI-Portal erzeugt ServeFlow auf der Lieder-Seite einen
+**Nutzungsbericht**: pro Lied die Anzahl Termine im gewählten Zeitraum, in
+deren Ablaufplan es stand (abgesagte Termine zählen nicht; dasselbe Lied
+zweimal im selben Gottesdienst zählt einmal).
+
+![CCLI-Nutzungsbericht](screenshots/22-ccli-bericht.png)
+
+Den Bericht kannst du als **CSV herunterladen** und die Zahlen im CCLI-Portal
+eintragen. Admins hinterlegen dort auch die **CCLI-Lizenznummer** der
+Gemeinde. Eine automatische Meldung an CCLI gibt es (noch) nicht – auch das
+scheitert derzeit am geschlossenen Partnerprogramm.
 
 ## 6. Abwesenheiten pflegen
 

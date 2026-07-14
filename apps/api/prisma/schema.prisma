@@ -625,13 +625,18 @@ model ServicePlanItem {
   @@index([eventId])
 }
 
-// Liederdatenbank
+// Liederdatenbank. lyrics hält die ChordPro-Quelle (bzw. den reinen
+// Text) aus dem SongSelect-/Datei-Import – Voraussetzung fürs Speichern
+// ist die CCLI-Lizenz der Gemeinde (siehe Anwenderhandbuch).
 model Song {
   id         String  @id @default(uuid()) @db.Uuid
   title      String
   defaultKey String?
   tempoBpm   Int?
   ccliNumber String?
+  author     String?
+  copyright  String?
+  lyrics     String? @db.Text
   createdAt  DateTime @default(now())
 
   arrangements SongArrangement[]
