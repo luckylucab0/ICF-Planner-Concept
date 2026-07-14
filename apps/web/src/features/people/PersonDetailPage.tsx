@@ -361,7 +361,7 @@ export default function PersonDetailPage() {
                     {t(`teams.roles.${membership.role}`)}
                   </span>
                   {manageable && (
-                    <span className="ml-auto flex items-center gap-2">
+                    <span className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
                       <select
                         value={membership.role}
                         onChange={(e) =>

@@ -62,19 +62,29 @@ export class SignupService {
   }
 
   // Offene Dienste, für die ICH mich eintragen kann: freigegebene Slots
-  // künftiger veröffentlichter Termine, passende Position, noch Platz,
-  // nicht schon am selben Termin eingeteilt, nicht abwesend.
+  // künftiger veröffentlichter Termine, passende Position ODER eigenes
+  // Team, noch Platz, nicht schon am selben Termin eingeteilt, nicht
+  // abwesend.
   async openForMe(user: AuthUser) {
-    const skills = await this.prisma.positionSkill.findMany({
-      where: { personId: user.personId },
-      select: { positionId: true },
-    });
-    if (skills.length === 0) return [];
+    const [skills, memberships] = await Promise.all([
+      this.prisma.positionSkill.findMany({
+        where: { personId: user.personId },
+        select: { positionId: true },
+      }),
+      this.prisma.teamMembership.findMany({
+        where: { personId: user.personId },
+        select: { teamId: true },
+      }),
+    ]);
+    if (skills.length === 0 && memberships.length === 0) return [];
 
     const slots = await this.prisma.eventPositionSlot.findMany({
       where: {
         openForSignup: true,
-        positionId: { in: skills.map((s) => s.positionId) },
+        OR: [
+          { positionId: { in: skills.map((s) => s.positionId) } },
+          { position: { teamId: { in: memberships.map((m) => m.teamId) } } },
+        ],
         event: { status: 'PUBLISHED', startsAt: { gte: new Date() } },
       },
       include: {
@@ -136,11 +146,20 @@ export class SignupService {
     if (slot.event.startsAt < new Date()) {
       throw new ForbiddenException('Termin liegt in der Vergangenheit');
     }
-    const skill = await this.prisma.positionSkill.findUnique({
-      where: { positionId_personId: { positionId: slot.positionId, personId: user.personId } },
-    });
-    if (!skill) {
-      throw new ForbiddenException('Du bist dieser Position nicht zugeordnet');
+    // Eintragen darf, wer der Position zugeordnet ODER Mitglied des Teams
+    // ist – eine Freigabe soll nicht an fehlender Skill-Pflege scheitern
+    const [skill, membership] = await Promise.all([
+      this.prisma.positionSkill.findUnique({
+        where: { positionId_personId: { positionId: slot.positionId, personId: user.personId } },
+      }),
+      this.prisma.teamMembership.findUnique({
+        where: {
+          teamId_personId: { teamId: slot.position.team.id, personId: user.personId },
+        },
+      }),
+    ]);
+    if (!skill && !membership) {
+      throw new ForbiddenException('Du bist weder der Position noch dem Team zugeordnet');
     }
     const taken = slot.assignments.filter((a) => a.status !== 'DECLINED').length;
     if (taken >= slot.requiredCount) {

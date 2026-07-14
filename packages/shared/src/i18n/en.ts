@@ -111,6 +111,7 @@ export const en = {
     neverServed: 'never served yet',
     recentCount: '{{count}} assignments in 90 days',
     warnAdjacentDay: 'serving the day before/after',
+    warnNoPositionSkill: 'not assigned to this position',
     declineReason: 'Reason (optional)',
     conflictUnavailable: 'This person is unavailable on that date.',
   },

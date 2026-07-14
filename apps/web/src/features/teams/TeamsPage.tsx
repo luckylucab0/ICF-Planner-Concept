@@ -157,7 +157,7 @@ export default function TeamsPage() {
           <ul className="mt-1 divide-y divide-line">
             {openTeam.members.map((member) => (
               <li key={member.id} className="flex flex-wrap items-center gap-2 py-1.5 text-sm">
-                <span>
+                <span className="min-w-0">
                   {member.firstName} {member.lastName}
                   {ROLE_BADGE[member.role] && (
                     <span className={`ml-1 ${ROLE_BADGE[member.role]}`}>
@@ -165,9 +165,12 @@ export default function TeamsPage() {
                     </span>
                   )}
                 </span>
-                <span className="ml-auto flex items-center gap-2">
+                {/* min-w-0 + wrap: lange E-Mails dürfen die Karte auf dem
+                    Handy nicht sprengen – Aktionen brechen in die nächste
+                    Zeile um, Kontaktdaten werden gekürzt */}
+                <span className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
                   {(member.email || member.phone) && (
-                    <span className="truncate text-muted">
+                    <span className="max-w-[180px] truncate text-muted sm:max-w-xs">
                       {[member.email, member.phone].filter(Boolean).join(' · ')}
                     </span>
                   )}
@@ -214,7 +217,7 @@ export default function TeamsPage() {
                 value={addPersonId}
                 onChange={(e) => setAddPersonId(e.target.value)}
                 aria-label={t('teams.addMember')}
-                className="input w-auto px-2 py-1 text-xs"
+                className="input w-auto max-w-full min-w-0 px-2 py-1 text-xs"
               >
                 <option value="">{t('teams.selectPerson')}</option>
                 {allPeople

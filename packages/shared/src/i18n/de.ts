@@ -113,6 +113,7 @@ export const de = {
     neverServed: 'noch nie eingeteilt',
     recentCount: '{{count}} Einsätze in 90 Tagen',
     warnAdjacentDay: 'Dienst am Vor-/Folgetag',
+    warnNoPositionSkill: 'Position nicht zugeordnet',
     declineReason: 'Grund (optional)',
     conflictUnavailable: 'Diese Person ist an dem Termin abwesend.',
   },

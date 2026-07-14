@@ -78,7 +78,19 @@ export class AssignmentsService {
       where: { positionId: slot.positionId, person: { status: 'ACTIVE' } },
       include: { person: { select: { id: true, firstName: true, lastName: true } } },
     });
-    const personIds = skills.map((skill) => skill.person.id);
+    // Fallback-Kandidaten: aktive Team-Mitglieder ohne Zuordnung zu dieser
+    // Position. So bleibt die Liste auch dann nutzbar, wenn (noch) keine
+    // Positions-Skills gepflegt sind – markiert per noPositionSkill-Warnung.
+    const skilledIds = new Set(skills.map((skill) => skill.person.id));
+    const memberships = await this.prisma.teamMembership.findMany({
+      where: {
+        teamId: slot.position.team.id,
+        person: { status: 'ACTIVE' },
+        personId: { notIn: [...skilledIds] },
+      },
+      include: { person: { select: { id: true, firstName: true, lastName: true } } },
+    });
+    const personIds = [...skilledIds, ...memberships.map((m) => m.person.id)];
     if (personIds.length === 0) return [];
 
     const [unavailable, sameEvent, history, adjacent] = await Promise.all([
@@ -132,16 +144,23 @@ export class AssignmentsService {
       }
     }
 
-    const facts: CandidateFacts[] = skills.map((skill) => ({
-      personId: skill.person.id,
-      name: `${skill.person.firstName} ${skill.person.lastName}`,
-      skillLevel: skill.skillLevel,
-      lastServedAt: lastServed.get(skill.person.id) ?? null,
-      assignmentsLast90Days: recentCount.get(skill.person.id) ?? 0,
-      isUnavailable: unavailable.has(skill.person.id),
-      alreadyAssignedSameEvent: sameEventSet.has(skill.person.id),
-      assignedAdjacentDay: adjacentSet.has(skill.person.id),
-    }));
+    const buildFacts = (
+      person: { id: string; firstName: string; lastName: string },
+      skillLevel: CandidateFacts['skillLevel'],
+    ): CandidateFacts => ({
+      personId: person.id,
+      name: `${person.firstName} ${person.lastName}`,
+      skillLevel,
+      lastServedAt: lastServed.get(person.id) ?? null,
+      assignmentsLast90Days: recentCount.get(person.id) ?? 0,
+      isUnavailable: unavailable.has(person.id),
+      alreadyAssignedSameEvent: sameEventSet.has(person.id),
+      assignedAdjacentDay: adjacentSet.has(person.id),
+    });
+    const facts: CandidateFacts[] = [
+      ...skills.map((skill) => buildFacts(skill.person, skill.skillLevel)),
+      ...memberships.map((membership) => buildFacts(membership.person, null)),
+    ];
 
     return scoreCandidates(facts, eventDate);
   }
@@ -152,14 +171,24 @@ export class AssignmentsService {
     const slot = await this.loadSlot(slotId);
     await this.ensureCanManageTeam(user, slot.position.team.id);
 
-    // Nur Personen mit dieser Position sind einteilbar – schützt vor
-    // Tippfehlern und hält die Skill-Pflege ehrlich
-    const skill = await this.prisma.positionSkill.findUnique({
-      where: { positionId_personId: { positionId: slot.positionId, personId } },
-      include: { person: true },
-    });
-    if (!skill || skill.person.status !== 'ACTIVE') {
-      throw new ForbiddenException('Person ist dieser Position nicht zugeordnet');
+    // Einteilbar ist, wer der Position zugeordnet ODER Mitglied des Teams
+    // ist – so funktioniert die Einteilung auch ohne gepflegte Skills;
+    // die Vorschläge markieren fehlende Zuordnung mit einer Warnung.
+    const [skill, membership] = await Promise.all([
+      this.prisma.positionSkill.findUnique({
+        where: { positionId_personId: { positionId: slot.positionId, personId } },
+        include: { person: { select: { status: true } } },
+      }),
+      this.prisma.teamMembership.findUnique({
+        where: { teamId_personId: { teamId: slot.position.team.id, personId } },
+        include: { person: { select: { status: true } } },
+      }),
+    ]);
+    const eligible =
+      (skill && skill.person.status === 'ACTIVE') ||
+      (membership && membership.person.status === 'ACTIVE');
+    if (!eligible) {
+      throw new ForbiddenException('Person ist weder der Position noch dem Team zugeordnet');
     }
 
     // Harte Konflikte melden statt still einteilen

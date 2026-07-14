@@ -99,20 +99,36 @@ export class ReplacementService {
       throw new ConflictException('Es läuft bereits eine Vertretungsanfrage');
     }
 
-    // Gleiche Eignungsprüfung wie beim Einteilen durch die Teamleitung
-    const skill = await this.prisma.positionSkill.findUnique({
-      where: {
-        positionId_personId: {
-          positionId: assignment.slot.positionId,
-          personId: candidatePersonId,
+    // Gleiche Eignungsprüfung wie beim Einteilen durch die Teamleitung:
+    // der Position zugeordnet ODER Mitglied des Teams
+    const [skill, membership] = await Promise.all([
+      this.prisma.positionSkill.findUnique({
+        where: {
+          positionId_personId: {
+            positionId: assignment.slot.positionId,
+            personId: candidatePersonId,
+          },
         },
-      },
-      include: { person: true },
-    });
-    if (!skill || skill.person.status !== 'ACTIVE') {
-      throw new ForbiddenException('Person ist dieser Position nicht zugeordnet');
+      }),
+      this.prisma.teamMembership.findUnique({
+        where: {
+          teamId_personId: {
+            teamId: assignment.slot.position.teamId,
+            personId: candidatePersonId,
+          },
+        },
+      }),
+    ]);
+    if (!skill && !membership) {
+      throw new ForbiddenException('Person ist weder der Position noch dem Team zugeordnet');
     }
-    if (!skill.person.email) {
+    const candidate = await this.prisma.person.findUniqueOrThrow({
+      where: { id: candidatePersonId },
+    });
+    if (candidate.status !== 'ACTIVE') {
+      throw new ForbiddenException('Person ist weder der Position noch dem Team zugeordnet');
+    }
+    if (!candidate.email) {
       throw new BadRequestException('Person hat keine E-Mail-Adresse hinterlegt');
     }
     if (await this.availability.isUnavailable(candidatePersonId, assignment.slot.event.startsAt)) {
@@ -150,18 +166,18 @@ export class ReplacementService {
       entityId: request.id,
     });
 
-    const texts = this.mailTexts(skill.person.locale);
+    const texts = this.mailTexts(candidate.locale);
     const vars = {
-      firstName: skill.person.firstName,
+      firstName: candidate.firstName,
       requesterName: `${assignment.person.firstName} ${assignment.person.lastName}`,
       eventTitle: assignment.slot.event.title,
-      date: this.formatDate(eventStart, skill.person.locale),
+      date: this.formatDate(eventStart, candidate.locale),
       position: assignment.slot.position.name,
       acceptUrl: `${env.APP_URL}/replacement/${token}?action=accept`,
       declineUrl: `${env.APP_URL}/replacement/${token}?action=decline`,
     };
     await this.mailer.send({
-      to: skill.person.email,
+      to: candidate.email,
       subject: interpolate(texts.replacementRequestSubject, vars),
       text: interpolate(texts.replacementRequestBody, vars),
     });
@@ -172,7 +188,7 @@ export class ReplacementService {
     return {
       id: request.id,
       status: request.status,
-      candidateName: `${skill.person.firstName} ${skill.person.lastName}`,
+      candidateName: `${candidate.firstName} ${candidate.lastName}`,
     };
   }
 

@@ -21,7 +21,9 @@
 export interface CandidateFacts {
   personId: string;
   name: string;
-  skillLevel: 'BEGINNER' | 'SOLID' | 'EXPERT';
+  // null = Person ist Team-Mitglied ohne Zuordnung zu dieser Position –
+  // einteilbar, aber mit Warnung und hinter allen Zugeordneten gereiht
+  skillLevel: 'BEGINNER' | 'SOLID' | 'EXPERT' | null;
   // Letzter nicht abgesagter Einsatz vor dem Termin (null = noch nie)
   lastServedAt: Date | null;
   // Anzahl Einsätze in den 90 Tagen vor dem Termin
@@ -44,7 +46,7 @@ export interface Suggestion {
   warnings: string[];
 }
 
-const SKILL_BONUS: Record<CandidateFacts['skillLevel'], number> = {
+const SKILL_BONUS: Record<NonNullable<CandidateFacts['skillLevel']>, number> = {
   EXPERT: 2,
   SOLID: 1,
   BEGINNER: 0,
@@ -64,10 +66,11 @@ export function scoreCandidates(candidates: CandidateFacts[], eventDate: Date): 
       const score =
         Math.min(daysSince ?? 365, 365) -
         candidate.assignmentsLast90Days * 15 +
-        SKILL_BONUS[candidate.skillLevel];
+        (candidate.skillLevel === null ? 0 : SKILL_BONUS[candidate.skillLevel]);
 
       const warnings: string[] = [];
       if (candidate.assignedAdjacentDay) warnings.push('assignedAdjacentDay');
+      if (candidate.skillLevel === null) warnings.push('noPositionSkill');
 
       return {
         personId: candidate.personId,
@@ -81,6 +84,9 @@ export function scoreCandidates(candidates: CandidateFacts[], eventDate: Date): 
     })
     .sort(
       (a, b) =>
+        // Zugeordnete stehen IMMER vor bloßen Team-Mitgliedern – egal wie
+        // fair die Verteilung für Letztere ausfiele
+        Number(b.skillLevel !== null) - Number(a.skillLevel !== null) ||
         b.score - a.score ||
         // deterministische Reihenfolge bei Punktgleichheit
         a.name.localeCompare(b.name),
