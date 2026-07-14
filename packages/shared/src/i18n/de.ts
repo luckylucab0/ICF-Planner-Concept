@@ -297,5 +297,17 @@ export const de = {
     signupAlertSubject: '{{personName}} hat sich eingetragen: {{position}} am {{date}}',
     signupAlertBody:
       'Hallo {{leaderName}},\n\n{{personName}} hat sich selbst für {{position}} bei „{{eventTitle}}" am {{date}} eingetragen (zählt als Zusage).\n\nZum Plan: {{planUrl}}',
+    inviteSubject: 'Willkommen bei ServeFlow – richte deinen Zugang ein',
+    inviteBody:
+      'Hallo {{firstName}},\n\nfür dich wurde ein ServeFlow-Zugang vorbereitet. Über diesen Link kannst du innerhalb von {{days}} Tagen dein Passwort setzen:\n{{inviteUrl}}\n\nDanach meldest du dich mit deiner E-Mail-Adresse {{email}} an.\n\nFalls du das nicht erwartest, ignoriere diese Mail.',
+    userRequestAdminSubject: 'Neuer Benutzer-Antrag: {{personName}} ({{teamName}})',
+    userRequestAdminBody:
+      'Hallo {{adminName}},\n\n{{requesterName}} beantragt einen Zugang für {{personName}} ({{email}}) im Team „{{teamName}}".\n\nPrüfen und entscheiden: {{reviewUrl}}',
+    userRequestApprovedSubject: 'Dein Benutzer-Antrag wurde genehmigt: {{personName}}',
+    userRequestApprovedBody:
+      'Hallo {{firstName}},\n\ndein Antrag für {{personName}} wurde genehmigt. Die Person wurde deinem Team „{{teamName}}" als Mitglied hinzugefügt und per E-Mail eingeladen.{{comment}}',
+    userRequestRejectedSubject: 'Dein Benutzer-Antrag wurde abgelehnt: {{personName}}',
+    userRequestRejectedBody:
+      'Hallo {{firstName}},\n\ndein Antrag für {{personName}} (Team „{{teamName}}") wurde leider abgelehnt.{{comment}}\n\nBei Fragen wende dich an die Admins.',
   },
 } as const;

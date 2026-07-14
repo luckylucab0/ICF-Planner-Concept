@@ -295,5 +295,17 @@ export const en = {
     signupAlertSubject: '{{personName}} signed up: {{position}} on {{date}}',
     signupAlertBody:
       'Hi {{leaderName}},\n\n{{personName}} signed up for {{position}} at "{{eventTitle}}" on {{date}} (counts as accepted).\n\nOpen the plan: {{planUrl}}',
+    inviteSubject: 'Welcome to ServeFlow – set up your access',
+    inviteBody:
+      'Hi {{firstName}},\n\na ServeFlow account has been prepared for you. Use this link within {{days}} days to set your password:\n{{inviteUrl}}\n\nAfterwards, sign in with your email address {{email}}.\n\nIf you were not expecting this, just ignore this email.',
+    userRequestAdminSubject: 'New user request: {{personName}} ({{teamName}})',
+    userRequestAdminBody:
+      'Hi {{adminName}},\n\n{{requesterName}} is requesting access for {{personName}} ({{email}}) in team "{{teamName}}".\n\nReview and decide: {{reviewUrl}}',
+    userRequestApprovedSubject: 'Your user request was approved: {{personName}}',
+    userRequestApprovedBody:
+      'Hi {{firstName}},\n\nyour request for {{personName}} was approved. The person has been added to your team "{{teamName}}" as a member and invited by email.{{comment}}',
+    userRequestRejectedSubject: 'Your user request was rejected: {{personName}}',
+    userRequestRejectedBody:
+      'Hi {{firstName}},\n\nyour request for {{personName}} (team "{{teamName}}") was rejected.{{comment}}\n\nIf you have questions, please contact the admins.',
   },
 } as const;
