@@ -108,4 +108,24 @@ describe('scoreCandidates (Vorschlags-Engine)', () => {
     expect(result).toHaveLength(1);
     expect(result[0].warnings).toContain('assignedAdjacentDay');
   });
+
+  it('Team-Mitglieder ohne Positions-Zuordnung: Warnung + immer hinter Zugeordneten', () => {
+    const result = scoreCandidates(
+      [
+        // Ohne Zuordnung, aber "am längsten nicht dran" – trotzdem hinten
+        candidate({ personId: 'nur-team', name: 'Nur Team', skillLevel: null }),
+        candidate({
+          personId: 'zugeordnet',
+          name: 'Zugeordnet',
+          skillLevel: 'BEGINNER',
+          lastServedAt: new Date('2026-07-13T10:00:00Z'),
+          assignmentsLast90Days: 4,
+        }),
+      ],
+      eventDate,
+    );
+    expect(result.map((s) => s.personId)).toEqual(['zugeordnet', 'nur-team']);
+    expect(result[1].warnings).toContain('noPositionSkill');
+    expect(result[0].warnings).not.toContain('noPositionSkill');
+  });
 });

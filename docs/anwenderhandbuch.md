@@ -79,10 +79,10 @@ du wählst eine aus, sie bekommt eine E-Mail mit einem Übernahme-Link:
 Gibt es Dienste, die deine Teamleitung zur **Selbst-Eintragung** freigegeben
 hat (z. B. Kaffee-Theke), erscheinen sie auf deiner Übersicht unter „Offene
 Dienste". Ein Klick auf **„Eintragen"** genügt – das zählt direkt als Zusage,
-deine Teamleitung wird informiert. Du siehst nur Dienste, für die du die
-passende Position hast und an denen du nicht abwesend bist. Dasselbe geht
-auch direkt im Termin: Bei freigegebenen Positionen steht dort der Button
-**„Mich eintragen"**.
+deine Teamleitung wird informiert. Du siehst Dienste, für die du die passende
+Position hast **oder deren Team du angehörst** – und an denen du nicht
+abwesend bist. Dasselbe geht auch direkt im Termin: Bei freigegebenen
+Positionen steht dort der Button **„Mich eintragen"**.
 
 ## 3. Auf eine Einteilung antworten (Zusagen/Absagen)
 
@@ -287,10 +287,10 @@ So funktioniert die Einteilung:
 
 Über **„Entfernen"** nimmst du eine Einteilung wieder heraus.
 
-**Mich eintragen:** Hast du selbst die passende Position, steht neben
-„Person eintragen" der Button **„Mich eintragen"** – ein Klick und du bist
-direkt mit Zusage eingeteilt. Der Dienst erscheint sofort unter „Meine
-Dienste" auf deiner Übersicht.
+**Mich eintragen:** Hast du selbst die passende Position oder gehörst du dem
+Team an, steht neben „Person eintragen" der Button **„Mich eintragen"** – ein
+Klick und du bist direkt mit Zusage eingeteilt. Der Dienst erscheint sofort
+unter „Meine Dienste" auf deiner Übersicht.
 
 **Selbst-Eintragung freigeben:** Über den Link **„Für Selbst-Eintragung
 freigeben"** öffnest du einen Slot für alle passenden Personen. Der Dienst
@@ -315,7 +315,10 @@ Als Teamleitung kannst du in **deinem eigenen Team**:
 - Mitglieder aufnehmen und entfernen
 - Positionen anlegen (z. B. Worship → Gitarre, Drums, Vocals)
 - Mitgliedern Positionen mit **Skill-Level** zuordnen (Einsteiger / Solide /
-  Profi) – nur so zugeordnete Personen können für die Position eingeteilt werden
+  Profi) – zugeordnete Personen stehen in den Einteilungs-Vorschlägen immer
+  zuoberst. Einteilbar (und selbst eintragbar) sind daneben auch alle
+  **Team-Mitglieder ohne Positions-Zuordnung**; die Vorschläge markieren sie
+  mit dem Hinweis „Position nicht zugeordnet"
 
 ### Mitglieder aufnehmen und entfernen
 

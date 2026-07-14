@@ -118,7 +118,7 @@ describe('Vertretung & Selbst-Eintragung (integration)', () => {
         startsAt: new Date(Date.now() + 14 * 86_400_000),
         endsAt: new Date(Date.now() + 14 * 86_400_000 + 90 * 60_000),
         status: 'PUBLISHED',
-        slots: { create: [{ positionId: thekeId, requiredCount: 2 }] },
+        slots: { create: [{ positionId: thekeId, requiredCount: 3 }] },
       },
       include: { slots: true },
     });
@@ -319,6 +319,76 @@ describe('Vertretung & Selbst-Eintragung (integration)', () => {
       headers: { cookie: helperCookie },
     });
     expect(again.statusCode).toBe(409);
+  });
+
+  it('Team-Mitglied ohne Positions-Zuordnung darf sich bei Freigabe eintragen', async () => {
+    // Member hat die Ton-, aber nicht die Theke-Position – die
+    // Team-Mitgliedschaft genügt für freigegebene Slots
+    const open = await app.inject({
+      method: 'GET',
+      url: '/api/v1/signup/open',
+      headers: { cookie: memberCookie },
+    });
+    expect(open.json().map((s: { slotId: string }) => s.slotId)).toContain(signupSlotId);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/v1/signup/slots/${signupSlotId}`,
+      headers: { cookie: memberCookie },
+    });
+    expect(response.statusCode).toBe(201);
+    expect(response.json().status).toBe('ACCEPTED');
+  });
+
+  it('Vorschläge enthalten Team-Mitglieder ohne Position (mit Warnung), Einteilen klappt', async () => {
+    // Frischer Termin, damit keine Same-Event-Sperre aus den Signup-Tests
+    // hineinspielt. Leader ist Team-Mitglied ohne Ton-Zuordnung → taucht
+    // als Fallback-Kandidat mit Warnung auf, hinter den Zugeordneten.
+    const event3 = await prisma.event.create({
+      data: {
+        title: `Gottesdienst3-${uniq}`,
+        startsAt: new Date(Date.now() + 21 * 86_400_000),
+        endsAt: new Date(Date.now() + 21 * 86_400_000 + 90 * 60_000),
+        status: 'PUBLISHED',
+        slots: { create: [{ positionId: tonId, requiredCount: 2 }] },
+      },
+      include: { slots: true },
+    });
+    const tonSlotId = event3.slots[0].id;
+
+    const suggestions = await app.inject({
+      method: 'GET',
+      url: `/api/v1/assignments/suggestions?slotId=${tonSlotId}`,
+      headers: { cookie: leaderCookie },
+    });
+    expect(suggestions.statusCode).toBe(200);
+    const rows = suggestions.json() as { name: string; warnings: string[] }[];
+    const leaderRow = rows.find((s) => s.name === `Leader ${uniq}`);
+    expect(leaderRow).toBeDefined();
+    expect(leaderRow!.warnings).toContain('noPositionSkill');
+    // Zugeordnete Kandidaten stehen vor bloßen Team-Mitgliedern
+    const names = rows.map((s) => s.name);
+    expect(names.indexOf(`Leader ${uniq}`)).toBeGreaterThan(names.indexOf(`Member ${uniq}`));
+    // Team-fremde Personen tauchen gar nicht auf
+    expect(names).not.toContain(`Outsider ${uniq}`);
+
+    // Einteilen eines Team-Mitglieds ohne Positions-Zuordnung funktioniert
+    const assign = await app.inject({
+      method: 'POST',
+      url: '/api/v1/assignments',
+      headers: { cookie: leaderCookie },
+      payload: { slotId: tonSlotId, personId: leaderId },
+    });
+    expect(assign.statusCode).toBe(201);
+
+    // Team-fremde Personen bleiben ausgeschlossen
+    const outsiderAssign = await app.inject({
+      method: 'POST',
+      url: '/api/v1/assignments',
+      headers: { cookie: leaderCookie },
+      payload: { slotId: tonSlotId, personId: outsiderId },
+    });
+    expect(outsiderAssign.statusCode).toBe(403);
   });
 
   it('geschlossener Slot lässt keine Eintragung zu (403)', async () => {

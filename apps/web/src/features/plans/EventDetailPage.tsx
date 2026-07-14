@@ -94,9 +94,12 @@ export default function EventDetailPage() {
         : t('assignments.lastServed', { days: suggestion.daysSinceLastService }),
       t('assignments.recentCount', { count: suggestion.assignmentsLast90Days }),
     ];
-    const warn = suggestion.warnings.includes('assignedAdjacentDay')
+    let warn = suggestion.warnings.includes('assignedAdjacentDay')
       ? ` · ⚠ ${t('assignments.warnAdjacentDay')}`
       : '';
+    if (suggestion.warnings.includes('noPositionSkill')) {
+      warn += ` · ⚠ ${t('assignments.warnNoPositionSkill')}`;
+    }
     return `${suggestion.name} — ${parts.join(' · ')}${warn}`;
   }
 
