@@ -284,6 +284,7 @@ export const en = {
     capabilities: {
       ASSIGN: 'Assign & suggestions',
       OPEN_SIGNUP: 'Open slots for self sign-up',
+      SELF_SIGNUP: 'Sign up for released services',
       MANAGE_MEMBERS: 'Manage members & roles',
       MANAGE_POSITIONS: 'Manage positions & skills',
       NOTES: 'Read/write team notes',

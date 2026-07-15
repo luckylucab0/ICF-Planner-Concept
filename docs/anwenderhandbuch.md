@@ -79,9 +79,11 @@ du wählst eine aus, sie bekommt eine E-Mail mit einem Übernahme-Link:
 Gibt es Dienste, die deine Teamleitung zur **Selbst-Eintragung** freigegeben
 hat (z. B. Kaffee-Theke), erscheinen sie auf deiner Übersicht unter „Offene
 Dienste". Ein Klick auf **„Eintragen"** genügt – das zählt direkt als Zusage,
-deine Teamleitung wird informiert. Du siehst Dienste, für die du die passende
-Position hast **oder deren Team du angehörst** – und an denen du nicht
-abwesend bist. Dasselbe geht auch direkt im Termin: Bei freigegebenen
+deine Teamleitung wird informiert. Du siehst die freigegebenen Dienste **deiner
+Teams**, sofern deine Team-Rolle das Recht **„Sich selbst in freigegebene
+Dienste eintragen"** hat (standardmäßig haben es alle Rollen; deine Teamleitung
+kann es in der Rechtematrix pro Rolle abschalten) – und sofern du an dem Termin
+nicht abwesend bist. Dasselbe geht auch direkt im Termin: Bei freigegebenen
 Positionen steht dort der Button **„Mich eintragen"**.
 
 ## 3. Auf eine Einteilung antworten (Zusagen/Absagen)
@@ -287,18 +289,20 @@ So funktioniert die Einteilung:
 
 Über **„Entfernen"** nimmst du eine Einteilung wieder heraus.
 
-**Mich eintragen:** Hast du selbst die passende Position oder gehörst du dem
-Team an, steht neben „Person eintragen" der Button **„Mich eintragen"** – ein
-Klick und du bist direkt mit Zusage eingeteilt. Der Dienst erscheint sofort
-unter „Meine Dienste" auf deiner Übersicht.
+**Mich eintragen:** Gehörst du dem Team an und hat deine Team-Rolle das Recht
+zur Selbst-Eintragung, steht neben „Person eintragen" der Button **„Mich
+eintragen"** – ein Klick und du bist direkt mit Zusage eingeteilt. Der Dienst
+erscheint sofort unter „Meine Dienste" auf deiner Übersicht.
 
 **Selbst-Eintragung freigeben:** Über den Link **„Für Selbst-Eintragung
-freigeben"** öffnest du einen Slot für alle passenden Personen. Der Dienst
-erscheint dann bei ihnen auf der Übersicht unter „Offene Dienste" (und im
-Termin als „Mich eintragen"-Button), und sie können sich ohne dein Zutun
-eintragen (zählt als Zusage, du wirst per E-Mail informiert). Praktisch für
-Dienste ohne feste Planung wie Kaffee oder Aufbau. Mit **„Freigabe
-aufheben"** schließt du den Slot wieder.
+freigeben"** öffnest du einen Slot für dein Team. Der Dienst erscheint dann
+bei allen Team-Mitgliedern, deren Rolle das Recht **„Sich selbst in
+freigegebene Dienste eintragen"** hat (Standard: alle Rollen, abschaltbar in
+der Rechtematrix), auf der Übersicht unter „Offene Dienste" (und im Termin als
+„Mich eintragen"-Button). Sie können sich ohne dein Zutun eintragen (zählt
+als Zusage, du wirst per E-Mail informiert). Praktisch für Dienste ohne feste
+Planung wie Kaffee oder Aufbau. Mit **„Freigabe aufheben"** schließt du den
+Slot wieder.
 
 **Vertretungen:** Sucht sich eine eingeteilte Person selbst eine Vertretung
 (siehe Kapitel 2), musst du nichts tun – die Einteilung wandert bei Zusage
@@ -316,9 +320,9 @@ Als Teamleitung kannst du in **deinem eigenen Team**:
 - Positionen anlegen (z. B. Worship → Gitarre, Drums, Vocals)
 - Mitgliedern Positionen mit **Skill-Level** zuordnen (Einsteiger / Solide /
   Profi) – zugeordnete Personen stehen in den Einteilungs-Vorschlägen immer
-  zuoberst. Einteilbar (und selbst eintragbar) sind daneben auch alle
-  **Team-Mitglieder ohne Positions-Zuordnung**; die Vorschläge markieren sie
-  mit dem Hinweis „Position nicht zugeordnet"
+  zuoberst. Einteilbar sind daneben auch alle **Team-Mitglieder ohne
+  Positions-Zuordnung**; die Vorschläge markieren sie mit dem Hinweis
+  „Position nicht zugeordnet"
 
 ### Mitglieder aufnehmen und entfernen
 
@@ -345,11 +349,14 @@ Jedes Mitglied hat im Team eine **Rolle**: **Leitung**, **Stellvertretung**,
 direkt in der Mitgliederliste über das Auswahlfeld neben der Person.
 
 Was die Rollen dürfen, legst du in der **Rechtematrix** deines Teams fest –
-pro Rolle und Recht ein Häkchen (z. B. Einteilen, Dienste freigeben,
-Positionen pflegen, Kontaktdaten sehen, Ablaufplan bearbeiten). Änderungen
-gelten sofort. Voreingestellt ist die Stellvertretung eine „Leitung ohne
-Personalhoheit" (alles außer Mitglieder & Rollen verwalten), Mitarbeit und
-Praktikum starten ohne Verwaltungsrechte.
+pro Rolle und Recht ein Häkchen (z. B. Einteilen, Dienste freigeben, sich
+selbst in freigegebene Dienste eintragen, Positionen pflegen, Kontaktdaten
+sehen, Ablaufplan bearbeiten). Änderungen gelten sofort. Voreingestellt ist
+die Stellvertretung eine „Leitung ohne Personalhoheit" (alles außer Mitglieder
+& Rollen verwalten), Mitarbeit und Praktikum starten ohne Verwaltungsrechte –
+das Recht **„Sich selbst in freigegebene Dienste eintragen"** haben aber alle
+Rollen von Anfang an, damit freigegebene Dienste wie die Kaffee-Theke ohne
+weitere Einrichtung funktionieren.
 
 Die **Leitung** hat immer alle Rechte im Team – sie ist bewusst nicht
 konfigurierbar, damit sich ein Team nicht selbst aussperren kann. Neue Teams

@@ -15,9 +15,9 @@ import { PermissionsService } from '../authz/permissions.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 // Selbst-Eintragung (Signup Sheets): Teamleiter geben einzelne Slots
-// frei, Mitglieder mit passender Position tragen sich selbst ein –
-// typisch für Dienste wie Kaffee oder Aufbau. Die Eintragung zählt
-// direkt als Zusage; die Teamleitung wird informiert.
+// frei, Team-Mitglieder mit dem Rollen-Recht SELF_SIGNUP tragen sich
+// selbst ein – typisch für Dienste wie Kaffee oder Aufbau. Die Eintragung
+// zählt direkt als Zusage; die Teamleitung wird informiert.
 @Injectable()
 export class SignupService {
   constructor(
@@ -62,29 +62,17 @@ export class SignupService {
   }
 
   // Offene Dienste, für die ICH mich eintragen kann: freigegebene Slots
-  // künftiger veröffentlichter Termine, passende Position ODER eigenes
-  // Team, noch Platz, nicht schon am selben Termin eingeteilt, nicht
-  // abwesend.
+  // künftiger veröffentlichter Termine in Teams, in denen meine Rolle das
+  // Recht SELF_SIGNUP hat; noch Platz, nicht schon am selben Termin
+  // eingeteilt, nicht abwesend.
   async openForMe(user: AuthUser) {
-    const [skills, memberships] = await Promise.all([
-      this.prisma.positionSkill.findMany({
-        where: { personId: user.personId },
-        select: { positionId: true },
-      }),
-      this.prisma.teamMembership.findMany({
-        where: { personId: user.personId },
-        select: { teamId: true },
-      }),
-    ]);
-    if (skills.length === 0 && memberships.length === 0) return [];
+    const teamIds = await this.permissions.getTeamIdsWithCapability(user, 'SELF_SIGNUP');
+    if (teamIds.length === 0) return [];
 
     const slots = await this.prisma.eventPositionSlot.findMany({
       where: {
         openForSignup: true,
-        OR: [
-          { positionId: { in: skills.map((s) => s.positionId) } },
-          { position: { teamId: { in: memberships.map((m) => m.teamId) } } },
-        ],
+        position: { teamId: { in: teamIds } },
         event: { status: 'PUBLISHED', startsAt: { gte: new Date() } },
       },
       include: {
@@ -146,20 +134,12 @@ export class SignupService {
     if (slot.event.startsAt < new Date()) {
       throw new ForbiddenException('Termin liegt in der Vergangenheit');
     }
-    // Eintragen darf, wer der Position zugeordnet ODER Mitglied des Teams
-    // ist – eine Freigabe soll nicht an fehlender Skill-Pflege scheitern
-    const [skill, membership] = await Promise.all([
-      this.prisma.positionSkill.findUnique({
-        where: { positionId_personId: { positionId: slot.positionId, personId: user.personId } },
-      }),
-      this.prisma.teamMembership.findUnique({
-        where: {
-          teamId_personId: { teamId: slot.position.team.id, personId: user.personId },
-        },
-      }),
-    ]);
-    if (!skill && !membership) {
-      throw new ForbiddenException('Du bist weder der Position noch dem Team zugeordnet');
+    // Eintragen darf, wer Mitglied des Teams ist UND dessen Teamrolle das
+    // Recht SELF_SIGNUP hat (Rechtematrix; Leiter/Admins immer)
+    if (!(await this.permissions.hasCapability(user, slot.position.team.id, 'SELF_SIGNUP'))) {
+      throw new ForbiddenException(
+        'Deine Rolle in diesem Team erlaubt keine Selbst-Eintragung – oder du bist kein Mitglied',
+      );
     }
     const taken = slot.assignments.filter((a) => a.status !== 'DECLINED').length;
     if (taken >= slot.requiredCount) {

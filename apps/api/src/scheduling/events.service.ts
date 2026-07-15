@@ -105,20 +105,14 @@ export class EventsService {
       ? event.slots.map((s) => s.position.team.id)
       : await this.permissions.getTeamIdsWithCapability(user, 'ASSIGN');
 
-    // Für canSignup: eigene Positionen + eigene Teams (Mitgliedschaft
-    // genügt – siehe SignupService) + ob ich an diesem Termin schon dran bin
-    const [mySkills, myMemberships] = await Promise.all([
-      this.prisma.positionSkill.findMany({
-        where: { personId: user.personId },
-        select: { positionId: true },
-      }),
-      this.prisma.teamMembership.findMany({
-        where: { personId: user.personId },
-        select: { teamId: true },
-      }),
-    ]);
-    const mySkillIds = new Set(mySkills.map((s) => s.positionId));
-    const myTeamIds = new Set(myMemberships.map((m) => m.teamId));
+    // Für canSignup: Teams, in denen meine Rolle das Recht SELF_SIGNUP hat
+    // (Admins überall – wie der hasCapability-Bypass im SignupService) +
+    // ob ich an diesem Termin schon dran bin
+    const signupTeamIds = new Set(
+      isAdmin
+        ? event.slots.map((s) => s.position.team.id)
+        : await this.permissions.getTeamIdsWithCapability(user, 'SELF_SIGNUP'),
+    );
     const alreadyInEvent = event.slots.some((slot) =>
       slot.assignments.some((a) => a.person.id === user.personId && a.status !== 'DECLINED'),
     );
@@ -153,7 +147,7 @@ export class EventsService {
           canSignup:
             event.status === 'PUBLISHED' &&
             inFuture &&
-            (mySkillIds.has(slot.position.id) || myTeamIds.has(slot.position.team.id)) &&
+            signupTeamIds.has(slot.position.team.id) &&
             taken < slot.requiredCount &&
             !alreadyInEvent &&
             (slot.openForSignup || canAssign),
